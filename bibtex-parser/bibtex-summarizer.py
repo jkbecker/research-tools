@@ -44,14 +44,10 @@ parser.add_argument('--may_contain', nargs='+', type=str,
 
 args = parser.parse_args()
 
-bibfilename = args.bibfilename
-outputfilename = args.outputfilename
+bibfilename = args.bibfilename[0]
+outputfilename = args.outputfilename[0]
 keywords_req = args.must_contain
 keywords_opt = args.may_contain
-
-print(keywords_req)
-print(keywords_opt)
-exit(0)
 
 if not os.path.isfile(bibfilename):
     print "bibtex-summarizer.py: \033[91mthis is not a file!\033[0m"
@@ -76,12 +72,14 @@ with open(bibfilename) as bibtex_file:
             author = element['author'] if element.has_key('author') else ("<NO AUTHOR>",)
             abstract = element['abstract'] if element.has_key('abstract') else "<NO ABSTRACT>"
             
-            output += u'\\cite{{{}}}: \\\\\n'.format(citeid)
-            output += u'\t\\begin{displayquote}\n'
-            output += u'\t\t\\textbf{{{0}}} \n\t\tby \\textit{{{1}}}: \\\\\n\t\t{2}\n'.format(title, ', '.join(author), abstract)
-            output += u'\t\\end{displayquote}\n\n'
-            #for author in element['author']:
-            #    print author
+            match = any(word in title+abstract for word in keywords_opt)
+            if match:
+                match = all(word in title+abstract for word in keywords_req)
+                if match:
+                    output += u'\\cite{{{}}}: \\\\\n'.format(citeid)
+                    output += u'\t\\begin{displayquote}\n'
+                    output += u'\t\t\\textbf{{{0}}} \n\t\tby \\textit{{{1}}}: \\\\\n\t\t{2}\n'.format(title, ', '.join(author), abstract)
+                    output += u'\t\\end{displayquote}\n\n'
         
 
 print output
